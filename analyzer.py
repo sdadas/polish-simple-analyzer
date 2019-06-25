@@ -4,6 +4,7 @@ from typing import Tuple, List
 
 from pexpect import popen_spawn
 from pexpect.popen_spawn import PopenSpawn
+import urllib.request
 
 class PolishAnalyzer(object):
 
@@ -12,9 +13,15 @@ class PolishAnalyzer(object):
 
     def __run_analyzer(self) -> PopenSpawn:
         dir = os.path.dirname(os.path.realpath(__file__))
-        jar_file = os.path.join(dir, 'target/polish-simple-analyzer.jar').replace('\\', '/')
-        process: PopenSpawn = popen_spawn.PopenSpawn('java -jar %s' % (jar_file,), encoding='utf-8')
+        jar = os.path.join(dir, "polish-simple-analyzer.jar").replace('\\', '/')
+        self.__download_analyzer(jar)
+        process: PopenSpawn = popen_spawn.PopenSpawn('java -jar %s' % (jar,), encoding='utf-8')
         return process
+
+    def __download_analyzer(self, jar: str):
+        if os.path.exists(jar): return
+        release = "https://github.com/sdadas/polish-simple-analyzer/releases/download/v0.1/polish-simple-analyzer.jar"
+        urllib.request.urlretrieve(release, jar)
 
     def analyze(self, sentence: str) -> Tuple[List, List]:
         escaped = sentence.encode('unicode-escape').decode('ascii').replace('\\x', '\\u00')
@@ -29,7 +36,7 @@ class PolishAnalyzer(object):
 
 if __name__ == '__main__':
     analyzer = PolishAnalyzer()
-    tokens, lemmas = analyzer.analyze("Zażółcić gęślą jaźń.")
+    tokens, lemmas = analyzer.analyze("Pchnąć jeża w tę łódź i ośm skrzyń fig.")
     print(tokens)
     print(lemmas)
     analyzer.close()
