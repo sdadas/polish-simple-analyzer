@@ -1,3 +1,4 @@
+import atexit
 import os
 import signal
 from typing import Tuple, List
@@ -10,6 +11,8 @@ class PolishAnalyzer(object):
 
     def __init__(self):
         self.analyzer: PopenSpawn = self.__run_analyzer()
+        self.analyzer.delimiter = "\n"
+        atexit.register(lambda: self.analyzer.kill(signal.SIGTERM))
 
     def __run_analyzer(self) -> PopenSpawn:
         dir = os.path.dirname(os.path.realpath(__file__))
@@ -30,13 +33,9 @@ class PolishAnalyzer(object):
         lemmas = self.analyzer.readline().strip().encode().decode('unicode-escape')
         return tokens.strip().split(), lemmas.strip().split()
 
-    def close(self):
-        self.analyzer.kill(signal.SIGTERM)
-
 
 if __name__ == '__main__':
     analyzer = PolishAnalyzer()
     tokens, lemmas = analyzer.analyze("Pchnąć jeża w tę łódź i ośm skrzyń fig.")
     print(tokens)
     print(lemmas)
-    analyzer.close()
